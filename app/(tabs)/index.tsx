@@ -1,75 +1,88 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Text, View, StyleSheet, Button } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { Image } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+
+const STAMP_KEY = 'loyalty_stamps';
+const STAMP_GOAL = 3;
+
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [stampCount, setStampCount] = useState<number>(0);
+
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem('userToken');
+    router.replace('/login');
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadStamps = async () => {
+
+        const count = await AsyncStorage.getItem(STAMP_KEY);
+
+        if (count !== null) setStampCount(parseInt(count, 10));
+      };
+
+      loadStamps();
+
+    }, [])
+  );
+
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Button title="Logout" onPress={handleLogout} />
+      <Image
+        source={require('../../assets/images/logo.jpg')} // adjust the path if you're deeper in the folder structure
+        style={styles.image}
+        resizeMode="contain" // or "cover", depending on your layout
+      />
+      <Text style={styles.title}>Morning Jacques</Text>
+      <Text style={styles.title}>You currently have the 3 class package</Text>
+      <Text style={styles.sessions}>🎯 Sessions Completed</Text>
+      <Text style={styles.count}>
+        {stampCount} / {STAMP_GOAL}
+      </Text>
+      {stampCount >= STAMP_GOAL && (
+        <Text style={styles.rewardText}>🎉 You've earned a free session!</Text>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    padding: 16,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    marginBottom: 12,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  count: {
+    fontSize: 40,
+    fontWeight: 'bold',
+
+  },
+  sessions: {
+    marginTop: 40,
+    fontSize: 24,
+  },
+  image: {
+    marginBottom: 20,
+  },
+  rewardText: {
+    fontSize: 20,
+    marginTop: 20,
+    color: 'green',
+    fontWeight: 'bold',
   },
 });
